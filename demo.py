@@ -8,7 +8,7 @@ from matplotlib import pyplot as plt
 # 加载图片
 # cv2.read(imagefile, parms)对于第二个参数，可以使用-1，0或1。
 # 颜色为1，灰度为0，不变为-1。因此，对于灰度，可以执行cv2.imread('watch.jpg', 0)。
-img = cv2.imread('quanquan.jpg', 1)
+img = cv2.imread('glnz2.jpeg', 1)
 # BGR转灰度图
 img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 # 灰度图转RGB
@@ -17,8 +17,6 @@ img_rgb = cv2.cvtColor(img_gray, cv2.COLOR_GRAY2RGB)
 img_bgr = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 # 保存图片
 cv2.imwrite('glnz_gray.jpeg', img_gray)
-
-
 
 # # img.shape可以获取图像的形状。他的返回值是一个包含行数，列数，通道数的元组。
 # print(img.shape)
@@ -116,32 +114,35 @@ cv2.imwrite('glnz_gray.jpeg', img_gray)
 
 
 
-# # # 2D卷积
-# # kernel = np.ones((5, 5), np.float32) / 25 
-# # smoothed = cv2.filter2D(img, -1, kernel) 
-# # # 平均模糊
-# # blur = cv2.blur(img, (5, 5))
-# # # 高斯模糊
-# # blur = cv2.GaussianBlur(img,(5, 5), 0)
-# # # 中值模糊
-# # blur = cv2.medianBlur(img, 5)
-# # 双向模糊
+# # 2D卷积
+# kernel = np.ones((5, 5), np.float32) / 25 
+# smoothed = cv2.filter2D(img, -1, kernel) 
+# # 平均模糊
+# blur = cv2.blur(img, (5, 5))
+# # 高斯模糊
+# blur = cv2.GaussianBlur(img,(5, 5), 0)
+# # 中值模糊
+# blur = cv2.medianBlur(img, 5)
+# 双向模糊
 # blur = cv2.bilateralFilter(img,9,75,75)
 
 # cv2.imshow('Original', img) 
-# cv2.imshow('Averaging', blur) 
+# cv2.imshow('Averaging', blur)
+# cv2.waitKey(0)
+# cv2.destroyAllWindows()
 
 
 
  
-# # 边缘检测cv2.Canny()
-# # 第一个参数是需要处理的原图像，该图像必须为单通道的灰度图；
-# # 第二个参数是阈值1；
-# # 第三个参数是阈值2。
-# # 其中较大的阈值2用于检测图像中明显的边缘，但一般情况下检测的效果不会那么完美，边缘检测出来是断断续续的。所以这时候用较小的第一个阈值用于将这些间断的边缘连接起来。
+# 边缘检测cv2.Canny()
+# 第一个参数是需要处理的原图像，该图像必须为单通道的灰度图；
+# 第二个参数是阈值1；
+# 第三个参数是阈值2。
+# 其中较大的阈值2用于检测图像中明显的边缘，但一般情况下检测的效果不会那么完美，边缘检测出来是断断续续的。所以这时候用较小的第一个阈值用于将这些间断的边缘连接起来。
 # cv2.imshow('Original', img)
 # edges = cv2.Canny(img, 100, 200) 
-# cv2.imshow('Edges', edges) 
+# cv2.imshow('Edges', edges)
+
 
 
 
@@ -353,27 +354,65 @@ cv2.imwrite('glnz_gray.jpeg', img_gray)
 # cv2.destroyAllWindows()
 
 threshold = 30
-learningRate = 0.1
+learningRate = 0.5
 background = None
 backImage = None
 foreground = None
 
+# cap = cv2.VideoCapture(0)
+# cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+# cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+# cap.set(cv2.CAP_PROP_FPS, 30)
+# while(1):
+#     _, frame = cap.read()
+    
+#     frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+#     if background is None:
+#         background = np.float32(frame_gray)
+#         continue
+
+#     backImage = cv2.convertScaleAbs(background)
+#     foreground = cv2.absdiff(frame_gray, backImage)
+#     kernel = cv2.getStructuringElement(cv2.MORPH_RECT,(7, 7))
+#     foreground = cv2.dilate(foreground, kernel)
+
+#     retval, foreground = cv2.threshold(foreground, threshold, 255, cv2.THRESH_BINARY_INV)
+
+#     background = np.float32(frame_gray)
+#     dst = cv2.resize(foreground, (40, 30))
+#     cv2.imshow('foreground', dst)
+
+
+#     k = cv2.waitKey(1) & 0xFF
+#     if k == 27:
+#         break
+
+# cv2.destroyAllWindows()
+# cap.release()
+
 cap = cv2.VideoCapture(0)
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+cap.set(cv2.CAP_PROP_FPS, 30)
 while(1):
     _, frame = cap.read()
+    
     frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     if background is None:
         background = np.float32(frame_gray)
 
     backImage = cv2.convertScaleAbs(background)
 
-    
-    foreground = cv2.absdiff(backImage, frame_gray)
-    retval, foreground = cv2.threshold(foreground, threshold, 255, cv2.THRESH_BINARY_INV)
-    
+    foreground = cv2.absdiff(frame_gray, backImage)
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT,(7, 7))
+    foreground = cv2.dilate(foreground, kernel)
+
+    # retval, foreground = cv2.threshold(foreground, threshold, 255, cv2.THRESH_BINARY_INV)
     cv2.accumulateWeighted(frame_gray, background, learningRate)
 
-    cv2.imshow('foreground', foreground)
+    dst = cv2.resize(foreground, (40, 30))
+    cv2.imshow('foreground', dst)
+
 
     k = cv2.waitKey(1) & 0xFF
     if k == 27:
